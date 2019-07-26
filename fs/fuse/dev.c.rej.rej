@@ -1,5 +1,5 @@
---- fs/fuse/dev.c
-+++ fs/fuse/dev.c
+--- fuse/dev.c
++++ fuse/dev.c
 @@ -181,8 +181,10 @@
  	}
  
