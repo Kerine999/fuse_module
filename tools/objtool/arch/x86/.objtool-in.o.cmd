@@ -1,0 +1,1 @@
+cmd_/memverge/home/catrin/modified_fuse/tools/objtool/arch/x86/objtool-in.o :=  ld -r -o /memverge/home/catrin/modified_fuse/tools/objtool/arch/x86/objtool-in.o  /memverge/home/catrin/modified_fuse/tools/objtool/arch/x86/decode.o

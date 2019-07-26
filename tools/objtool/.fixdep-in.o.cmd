@@ -1,0 +1,1 @@
+cmd_/memverge/home/catrin/modified_fuse/tools/objtool/fixdep-in.o :=  ld -r -o /memverge/home/catrin/modified_fuse/tools/objtool/fixdep-in.o  /memverge/home/catrin/modified_fuse/tools/objtool/fixdep.o
