@@ -1,34 +1,53 @@
 --- fs/fuse/dev.c
 +++ fs/fuse/dev.c
-@@ -181,8 +181,10 @@
- 	}
+@@ -702,13 +701,10 @@
+ 	unsigned move_pages:1;
+ };
  
- 	fuse_req_init_context(req);
--	req->waiting = 1;
--	req->background = for_background;
-+	__set_bit(FR_WAITING, &req->flags);
-+	if (for_background)
-+		__set_bit(FR_BACKGROUND, &req->flags);
-+
- 	return req;
- 
-  out:
-@@ -272,15 +274,15 @@
- 		req = get_reserved_req(fc, file);
- 
- 	fuse_req_init_context(req);
--	req->waiting = 1;
--	req->background = 0;
-+	__set_bit(FR_WAITING, &req->flags);
-+	__clear_bit(FR_BACKGROUND, &req->flags);
- 	return req;
- }
- 
- void fuse_put_request(struct fuse_conn *fc, struct fuse_req *req)
+-static void fuse_copy_init(struct fuse_copy_state *cs,
+-			   struct fuse_conn *fc,
+-			   int write,
++static void fuse_copy_init(struct fuse_copy_state *cs, int write,
+ 			   struct iov_iter *iter)
  {
- 	if (atomic_dec_and_test(&req->count)) {
--		if (unlikely(req->background)) {
-+		if (test_bit(FR_BACKGROUND, &req->flags)) {
- 			/*
- 			 * We get here in the unlikely case that a background
- 			 * request was allocated but not sent
+ 	memset(cs, 0, sizeof(*cs));
+-	cs->fc = fc;
+ 	cs->write = write;
+ 	cs->iter = iter;
+ }
+@@ -1357,7 +1353,7 @@
+ 	if (!iter_is_iovec(to))
+ 		return -EINVAL;
+ 
+-	fuse_copy_init(&cs, fc, 1, to);
++	fuse_copy_init(&cs, 1, to);
+ 
+ 	return fuse_dev_do_read(fc, file, &cs, iov_iter_count(to));
+ }
+@@ -1379,7 +1375,7 @@
+ 	if (!bufs)
+ 		return -ENOMEM;
+ 
+-	fuse_copy_init(&cs, fc, 1, NULL);
++	fuse_copy_init(&cs, 1, NULL);
+ 	cs.pipebufs = bufs;
+ 	cs.pipe = pipe;
+ 	ret = fuse_dev_do_read(fc, in, &cs, len);
+@@ -1957,7 +1953,7 @@
+ 	if (!iter_is_iovec(from))
+ 		return -EINVAL;
+ 
+-	fuse_copy_init(&cs, fc, 0, from);
++	fuse_copy_init(&cs, 0, from);
+ 
+ 	return fuse_dev_do_write(fc, &cs, iov_iter_count(from));
+ }
+@@ -2022,7 +2018,7 @@
+ 	}
+ 	pipe_unlock(pipe);
+ 
+-	fuse_copy_init(&cs, fc, 0, NULL);
++	fuse_copy_init(&cs, 0, NULL);
+ 	cs.pipebufs = bufs;
+ 	cs.nr_segs = nbuf;
+ 	cs.pipe = pipe;

@@ -174,8 +174,9 @@ static struct fuse_req *__fuse_get_req(struct fuse_conn *fc, unsigned npages,
 	}
 
 	fuse_req_init_context(fc, req);
-	req->waiting = 1;
-	req->background = for_background;
+	__set_bit(FR_WAITING, &req->flags);
+        if (for_background)
+                __set_bit(FR_BACKGROUND, &req->flags);
 	return req;
 
  out:
@@ -263,15 +264,15 @@ struct fuse_req *fuse_get_req_nofail_nopages(struct fuse_conn *fc,
 		req = get_reserved_req(fc, file);
 
 	fuse_req_init_context(fc, req);
-	req->waiting = 1;
-	req->background = 0;
+	__set_bit(FR_WAITING, &req->flags);
+        __clear_bit(FR_BACKGROUND, &req->flags);
 	return req;
 }
 
 void fuse_put_request(struct fuse_conn *fc, struct fuse_req *req)
 {
 	if (atomic_dec_and_test(&req->count)) {
-		if (unlikely(req->background)) {
+		if (test_bit(FR_BACKGROUND, &req->flags)) {
 			/*
 			 * We get here in the unlikely case that a background
 			 * request was allocated but not sent
@@ -282,9 +283,9 @@ void fuse_put_request(struct fuse_conn *fc, struct fuse_req *req)
 			spin_unlock(&fc->lock);
 		}
 
-		if (req->waiting) {
+		if (test_bit(FR_WAITING, &req->flags)) {
+			__clear_bit(FR_WAITING, &req->flags);
 			atomic_dec(&fc->num_waiting);
-			req->waiting = 0;
 		}
 
 		if (req->stolen_file)
@@ -376,9 +377,8 @@ __releases(fc->lock)
 	list_del_init(&req->list);
 	list_del_init(&req->intr_entry);
 	req->state = FUSE_REQ_FINISHED;
-	if (req->background) {
-		req->background = 0;
-
+	if (test_bit(FR_BACKGROUND, &req->flags)) {
+		clear_bit(FR_BACKGROUND, &req->flags);
 		if (fc->num_background == fc->max_background)
 			fc->blocked = 0;
 
@@ -433,12 +433,12 @@ __acquires(fc->lock)
 		if (req->state == FUSE_REQ_FINISHED)
 			return;
 
-		req->interrupted = 1;
+		set_bit(FR_INTERRUPTED, &req->flags);
 		if (req->state == FUSE_REQ_SENT)
 			queue_interrupt(fc, req);
 	}
 
-	if (!req->force) {
+	if (!test_bit(FR_FORCE, &req->flags)) {
 		sigset_t oldset;
 
 		/* Only fatal signals may interrupt this */
@@ -469,7 +469,7 @@ __acquires(fc->lock)
 
 static void __fuse_request_send(struct fuse_conn *fc, struct fuse_req *req)
 {
-	BUG_ON(req->background);
+	BUG_ON(test_bit(FR_BACKGROUND, &req->flags));
 	spin_lock(&fc->lock);
 	if (!fc->connected)
 		req->out.h.error = -ENOTCONN;
@@ -487,9 +487,9 @@ static void __fuse_request_send(struct fuse_conn *fc, struct fuse_req *req)
 
 void fuse_request_send(struct fuse_conn *fc, struct fuse_req *req)
 {
-	req->isreply = 1;
-	if (!req->waiting) {
-		req->waiting = 1;
+	__set_bit(FR_ISREPLY, &req->flags);
+	if (!test_bit(FR_WAITING, &req->flags)) {
+		__set_bit(FR_WAITING, &req->flags);
 		atomic_inc(&fc->num_waiting);
 	}
 	__fuse_request_send(fc, req);
@@ -504,12 +504,12 @@ EXPORT_SYMBOL_GPL(fuse_request_send);
 void fuse_request_send_background_locked(struct fuse_conn *fc,
 					 struct fuse_req *req)
 {
-	BUG_ON(!req->background);
-	if (!req->waiting) {
-		req->waiting = 1;
+	BUG_ON(!test_bit(FR_BACKGROUND, &req->flags));
+	if (!test_bit(FR_WAITING, &req->flags)) {
+		__set_bit(FR_WAITING, &req->flags);
 		atomic_inc(&fc->num_waiting);
 	}
-	req->isreply = 1;
+	__set_bit(FR_ISREPLY, &req->flags);
 	fc->num_background++;
 	if (fc->num_background == fc->max_background)
 		fc->blocked = 1;
@@ -543,7 +543,7 @@ static int fuse_request_send_notify_reply(struct fuse_conn *fc,
 {
 	int err = -ENODEV;
 
-	req->isreply = 0;
+	__clear_bit(FR_ISREPLY, &req->flags);
 	req->in.h.unique = unique;
 	spin_lock(&fc->lock);
 	if (fc->connected) {
@@ -570,7 +570,7 @@ void fuse_force_forget(struct file *file, u64 nodeid)
 	req->in.numargs = 1;
 	req->in.args[0].size = sizeof(inarg);
 	req->in.args[0].value = &inarg;
-	req->isreply = 0;
+	__clear_bit(FR_ISREPLY, &req->flags);
 	__fuse_request_send(fc, req);
 	/* ignore errors */
 	fuse_put_request(fc, req);
@@ -586,10 +586,10 @@ static int lock_request(struct fuse_conn *fc, struct fuse_req *req)
 	int err = 0;
 	if (req) {
 		spin_lock(&fc->lock);
-		if (req->aborted)
+		if (test_bit(FR_ABORTED, &req->flags))
 			err = -ENOENT;
 		else
-			req->locked = 1;
+			set_bit(FR_LOCKED, &req->flags);
 		spin_unlock(&fc->lock);
 	}
 	return err;
@@ -604,10 +604,10 @@ static int unlock_request(struct fuse_conn *fc, struct fuse_req *req)
 	int err = 0;
 	if (req) {
 		spin_lock(&fc->lock);
-		if (req->aborted)
+		if (test_bit(FR_ABORTED, &req->flags))
 			err = -ENOENT;
 		else
-			req->locked = 0;
+			clear_bit(FR_LOCKED, &req->flags);
 		spin_unlock(&fc->lock);
 	}
 	return err;
@@ -841,7 +841,7 @@ static int fuse_try_move_page(struct fuse_copy_state *cs, struct page **pagep)
 
 	err = 0;
 	spin_lock(&cs->fc->lock);
-	if (cs->req->aborted)
+	if (test_bit(FR_ABORTED, &cs->req->flags))
 		err = -ENOENT;
 	else
 		*pagep = newpage;
@@ -1255,7 +1255,7 @@ static ssize_t fuse_dev_do_read(struct fuse_conn *fc, struct file *file,
 				     (struct fuse_arg *) in->args, 0);
 	fuse_copy_finish(cs);
 	spin_lock(&fc->lock);
-	req->locked = 0;
+	clear_bit(FR_LOCKED, &req->flags);
 	if (!fc->connected) {
 		request_end(fc, req);
 		return -ENODEV;
@@ -1265,12 +1265,12 @@ static ssize_t fuse_dev_do_read(struct fuse_conn *fc, struct file *file,
 		request_end(fc, req);
 		return err;
 	}
-	if (!req->isreply)
+	if (!test_bit(FR_ISREPLY, &req->flags)) {
 		request_end(fc, req);
-	else {
+	} else {
 		req->state = FUSE_REQ_SENT;
 		list_move_tail(&req->list, &fc->processing);
-		if (req->interrupted)
+		if (test_bit(FR_INTERRUPTED, &req->flags))
 			queue_interrupt(fc, req);
 		spin_unlock(&fc->lock);
 	}
@@ -1864,7 +1864,7 @@ static ssize_t fuse_dev_do_write(struct fuse_conn *fc,
 	req->state = FUSE_REQ_WRITING;
 	list_move(&req->list, &fc->io);
 	req->out.h = oh;
-	req->locked = 1;
+	set_bit(FR_LOCKED, &req->flags);
 	cs->req = req;
 	if (!req->out.page_replace)
 		cs->move_pages = 0;
@@ -1874,7 +1874,7 @@ static ssize_t fuse_dev_do_write(struct fuse_conn *fc,
 	fuse_copy_finish(cs);
 
 	spin_lock(&fc->lock);
-	req->locked = 0;
+	clear_bit(FR_LOCKED, &req->flags);
 	if (!fc->connected)
 		err = -ENOENT;
 	else if (err)
@@ -2037,8 +2037,8 @@ __acquires(fc->lock)
 
 	list_for_each_entry_safe(req, next, &fc->io, list) {
 		req->out.h.error = -ECONNABORTED;
-		req->aborted = 1;
-		if (!req->locked)
+		set_bit(FR_ABORTED, &req->flags);
+		if (!test_bit(FR_LOCKED, &req->flags))
 			list_move(&req->list, &to_end);
 	}
 	while (!list_empty(&to_end)) {
