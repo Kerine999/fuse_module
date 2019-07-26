@@ -370,8 +370,8 @@ void fuse_conn_kill(struct fuse_conn *fc)
 	fc->initialized = 1;
 	spin_unlock(&fc->lock);
 	/* Flush all readers on this fs */
-	kill_fasync(&fc->fasync, SIGIO, POLL_IN);
-	wake_up_all(&fc->waitq);
+	kill_fasync(&fc->iq.fasync, SIGIO, POLL_IN);
+	wake_up_all(&fc->iq.waitq);
 	wake_up_all(&fc->blocked_waitq);
 	wake_up_all(&fc->reserved_req_waitq);
 }
