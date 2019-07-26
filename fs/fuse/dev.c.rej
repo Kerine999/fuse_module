@@ -1,20 +1,34 @@
 --- fs/fuse/dev.c
 +++ fs/fuse/dev.c
-@@ -2199,14 +2199,9 @@
- {
- 	struct fuse_conn *fc = fuse_get_conn(file);
- 	if (fc) {
--		spin_lock(&fc->lock);
--		fc->connected = 0;
--		fc->blocked = 0;
--		fuse_set_initialized(fc);
--		end_queued_requests(fc);
--		end_polls(fc);
--		wake_up_all(&fc->blocked_waitq);
--		spin_unlock(&fc->lock);
-+		WARN_ON(!list_empty(&fc->io));
-+		WARN_ON(fc->fasync != NULL);
-+		fuse_abort_conn(fc);
- 		fuse_conn_put(fc);
+@@ -181,8 +181,10 @@
  	}
  
+ 	fuse_req_init_context(req);
+-	req->waiting = 1;
+-	req->background = for_background;
++	__set_bit(FR_WAITING, &req->flags);
++	if (for_background)
++		__set_bit(FR_BACKGROUND, &req->flags);
++
+ 	return req;
+ 
+  out:
+@@ -272,15 +274,15 @@
+ 		req = get_reserved_req(fc, file);
+ 
+ 	fuse_req_init_context(req);
+-	req->waiting = 1;
+-	req->background = 0;
++	__set_bit(FR_WAITING, &req->flags);
++	__clear_bit(FR_BACKGROUND, &req->flags);
+ 	return req;
+ }
+ 
+ void fuse_put_request(struct fuse_conn *fc, struct fuse_req *req)
+ {
+ 	if (atomic_dec_and_test(&req->count)) {
+-		if (unlikely(req->background)) {
++		if (test_bit(FR_BACKGROUND, &req->flags)) {
+ 			/*
+ 			 * We get here in the unlikely case that a background
+ 			 * request was allocated but not sent
