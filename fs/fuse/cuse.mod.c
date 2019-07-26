@@ -25,11 +25,11 @@ __attribute__((section("__versions"))) = {
 	{ 0xf23b2e74, __VMLINUX_SYMBOL_STR(misc_register) },
 	{ 0x7e5df8e3, __VMLINUX_SYMBOL_STR(__class_create) },
 	{ 0x202e08c3, __VMLINUX_SYMBOL_STR(fuse_dev_operations) },
-	{ 0x279020e9, __VMLINUX_SYMBOL_STR(fuse_put_request) },
-	{ 0x1547d665, __VMLINUX_SYMBOL_STR(fuse_request_send_background) },
+	{ 0x539f4780, __VMLINUX_SYMBOL_STR(fuse_put_request) },
+	{ 0x7c994e4f, __VMLINUX_SYMBOL_STR(fuse_request_send_background) },
 	{ 0x434693dd, __VMLINUX_SYMBOL_STR(alloc_pages_current) },
-	{ 0x83e515d1, __VMLINUX_SYMBOL_STR(fuse_get_req_for_background) },
-	{ 0x549d8908, __VMLINUX_SYMBOL_STR(fuse_conn_init) },
+	{ 0xdabc5fd6, __VMLINUX_SYMBOL_STR(fuse_get_req_for_background) },
+	{ 0x9e9c93b, __VMLINUX_SYMBOL_STR(fuse_conn_init) },
 	{ 0x9790eb74, __VMLINUX_SYMBOL_STR(kobject_uevent) },
 	{ 0x343a1a8, __VMLINUX_SYMBOL_STR(__list_add) },
 	{ 0x5f675a65, __VMLINUX_SYMBOL_STR(cdev_add) },
@@ -51,14 +51,14 @@ __attribute__((section("__versions"))) = {
 	{ 0x7cd8d75e, __VMLINUX_SYMBOL_STR(page_offset_base) },
 	{ 0x97651e6c, __VMLINUX_SYMBOL_STR(vmemmap_base) },
 	{ 0xa281370e, __VMLINUX_SYMBOL_STR(__free_pages) },
-	{ 0x68b37458, __VMLINUX_SYMBOL_STR(fuse_conn_kill) },
+	{ 0xb6230fe6, __VMLINUX_SYMBOL_STR(fuse_conn_kill) },
 	{ 0xf0fdf6cb, __VMLINUX_SYMBOL_STR(__stack_chk_fail) },
 	{ 0xe25c13b5, __VMLINUX_SYMBOL_STR(fuse_direct_io) },
 	{ 0x2350bbe8, __VMLINUX_SYMBOL_STR(fuse_do_ioctl) },
-	{ 0x419f5fe2, __VMLINUX_SYMBOL_STR(fuse_do_open) },
-	{ 0x2bebec09, __VMLINUX_SYMBOL_STR(fuse_conn_get) },
-	{ 0x2274cc67, __VMLINUX_SYMBOL_STR(fuse_conn_put) },
-	{ 0xde7f16dd, __VMLINUX_SYMBOL_STR(fuse_sync_release) },
+	{ 0x922d2fa4, __VMLINUX_SYMBOL_STR(fuse_do_open) },
+	{ 0xdbf2f1dc, __VMLINUX_SYMBOL_STR(fuse_conn_get) },
+	{ 0x65d0e722, __VMLINUX_SYMBOL_STR(fuse_conn_put) },
+	{ 0xbf8d003a, __VMLINUX_SYMBOL_STR(fuse_sync_release) },
 	{ 0x37a0cba, __VMLINUX_SYMBOL_STR(kfree) },
 	{ 0x9469482, __VMLINUX_SYMBOL_STR(kfree_call_rcu) },
 	{ 0xf8e14ba2, __VMLINUX_SYMBOL_STR(fuse_dev_release) },
@@ -69,7 +69,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x65e75cb6, __VMLINUX_SYMBOL_STR(__list_del_entry) },
 	{ 0x9abdea30, __VMLINUX_SYMBOL_STR(mutex_lock) },
 	{ 0x91715312, __VMLINUX_SYMBOL_STR(sprintf) },
-	{ 0x8401e2ac, __VMLINUX_SYMBOL_STR(fuse_abort_conn) },
+	{ 0x4519b3a0, __VMLINUX_SYMBOL_STR(fuse_abort_conn) },
 	{ 0x7cf5b2b3, __VMLINUX_SYMBOL_STR(dev_get_drvdata) },
 	{ 0xbdfb6dbb, __VMLINUX_SYMBOL_STR(__fentry__) },
 };
@@ -80,7 +80,7 @@ __attribute__((section(".modinfo"))) =
 "depends=fuse";
 
 
-MODULE_INFO(srcversion, "5BBFB6DE3C6359F148C990A");
+MODULE_INFO(srcversion, "359F922832EF55D8640BEC2");
 MODULE_INFO(rhelversion, "7.6");
 #ifdef RETPOLINE
 	MODULE_INFO(retpoline, "Y");
