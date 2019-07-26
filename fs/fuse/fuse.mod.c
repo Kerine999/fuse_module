@@ -58,7 +58,6 @@ __attribute__((section("__versions"))) = {
 	{ 0x2837d90c, __VMLINUX_SYMBOL_STR(pid_vnr) },
 	{ 0x79aa04a2, __VMLINUX_SYMBOL_STR(get_random_bytes) },
 	{ 0x34184afe, __VMLINUX_SYMBOL_STR(current_kernel_time) },
-	{ 0xb5dcab5b, __VMLINUX_SYMBOL_STR(remove_wait_queue) },
 	{ 0x50612798, __VMLINUX_SYMBOL_STR(seq_puts) },
 	{ 0xe954762d, __VMLINUX_SYMBOL_STR(is_bad_inode) },
 	{ 0x2ee05603, __VMLINUX_SYMBOL_STR(generic_file_open) },
@@ -103,7 +102,6 @@ __attribute__((section("__versions"))) = {
 	{ 0x41972754, __VMLINUX_SYMBOL_STR(make_kgid) },
 	{ 0xf432dd3d, __VMLINUX_SYMBOL_STR(__init_waitqueue_head) },
 	{ 0x71de9b3f, __VMLINUX_SYMBOL_STR(_copy_to_user) },
-	{ 0xffd5a395, __VMLINUX_SYMBOL_STR(default_wake_function) },
 	{ 0x20ec224, __VMLINUX_SYMBOL_STR(generic_pipe_buf_map) },
 	{ 0xfe7c4287, __VMLINUX_SYMBOL_STR(nr_cpu_ids) },
 	{ 0xb369ab86, __VMLINUX_SYMBOL_STR(generic_pipe_buf_confirm) },
@@ -216,7 +214,6 @@ __attribute__((section("__versions"))) = {
 	{ 0x5c8b5ce8, __VMLINUX_SYMBOL_STR(prepare_to_wait) },
 	{ 0x8bfe8c57, __VMLINUX_SYMBOL_STR(param_set_uint) },
 	{ 0x50331c78, __VMLINUX_SYMBOL_STR(invalidate_mapping_pages) },
-	{ 0xee46885d, __VMLINUX_SYMBOL_STR(add_wait_queue_exclusive) },
 	{ 0x1d24f3a7, __VMLINUX_SYMBOL_STR(simple_fill_super) },
 	{ 0x9185525, __VMLINUX_SYMBOL_STR(fget) },
 	{ 0xce605b1e, __VMLINUX_SYMBOL_STR(sb_set_blocksize) },
@@ -267,7 +264,7 @@ __attribute__((section(".modinfo"))) =
 "depends=";
 
 
-MODULE_INFO(srcversion, "E78569FBA8CBDDB5C9B2CEB");
+MODULE_INFO(srcversion, "F487F45CA5D6687036B56D7");
 MODULE_INFO(rhelversion, "7.6");
 #ifdef RETPOLINE
 	MODULE_INFO(retpoline, "Y");
