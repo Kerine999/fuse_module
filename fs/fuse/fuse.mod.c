@@ -136,8 +136,8 @@ __attribute__((section("__versions"))) = {
 	{ 0x948cde9, __VMLINUX_SYMBOL_STR(num_physpages) },
 	{ 0x521445b, __VMLINUX_SYMBOL_STR(list_del) },
 	{ 0x6343a556, __VMLINUX_SYMBOL_STR(get_zone_device_page) },
-	{ 0xce8b1878, __VMLINUX_SYMBOL_STR(__x86_indirect_thunk_r14) },
 	{ 0xfe3d5457, __VMLINUX_SYMBOL_STR(truncate_pagecache) },
+	{ 0x85fa44ee, __VMLINUX_SYMBOL_STR(__wake_up_locked) },
 	{ 0xe02521ac, __VMLINUX_SYMBOL_STR(clear_bdi_congested) },
 	{ 0xa07a37f0, __VMLINUX_SYMBOL_STR(memchr) },
 	{ 0x4e3567f7, __VMLINUX_SYMBOL_STR(match_int) },
@@ -220,6 +220,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x1d24f3a7, __VMLINUX_SYMBOL_STR(simple_fill_super) },
 	{ 0x9185525, __VMLINUX_SYMBOL_STR(fget) },
 	{ 0xce605b1e, __VMLINUX_SYMBOL_STR(sb_set_blocksize) },
+	{ 0xf05c7b8, __VMLINUX_SYMBOL_STR(__x86_indirect_thunk_r15) },
 	{ 0x1cd3bdb9, __VMLINUX_SYMBOL_STR(generic_readlink) },
 	{ 0x334c1f75, __VMLINUX_SYMBOL_STR(put_page) },
 	{ 0x46af2b76, __VMLINUX_SYMBOL_STR(d_make_root) },
@@ -266,7 +267,7 @@ __attribute__((section(".modinfo"))) =
 "depends=";
 
 
-MODULE_INFO(srcversion, "06B97D7957C070A0AA48289");
+MODULE_INFO(srcversion, "322E1150FD02F5172417610");
 MODULE_INFO(rhelversion, "7.6");
 #ifdef RETPOLINE
 	MODULE_INFO(retpoline, "Y");
