@@ -1,32 +1,12 @@
 --- fs/fuse/file.c
 +++ fs/fuse/file.c
-@@ -96,17 +96,17 @@
- 			 * Drop the release request when client does not
- 			 * implement 'open'
- 			 */
--			req->background = 0;
-+			__clear_bit(FR_BACKGROUND, &req->flags);
- 			iput(req->misc.release.inode);
- 			fuse_put_request(ff->fc, req);
- 		} else if (sync) {
--			req->background = 0;
-+			__clear_bit(FR_BACKGROUND, &req->flags);
- 			fuse_request_send(ff->fc, req);
- 			iput(req->misc.release.inode);
- 			fuse_put_request(ff->fc, req);
- 		} else {
- 			req->end = fuse_release_end;
--			req->background = 1;
-+			__set_bit(FR_BACKGROUND, &req->flags);
- 			fuse_request_send_background(ff->fc, req);
+@@ -1743,8 +1743,7 @@
  		}
- 		kfree(ff);
-@@ -1831,7 +1832,7 @@
- 		req->misc.write.in.write_flags |= FUSE_WRITE_CACHE;
- 		req->misc.write.next = NULL;
- 		req->in.argpages = 1;
--		req->background = 1;
-+		__set_bit(FR_BACKGROUND, &req->flags);
- 		req->num_pages = 0;
- 		req->end = fuse_writepage_end;
- 		req->inode = inode;
+ 	}
+ 
+-	if (old_req->num_pages == 1 && (old_req->state == FUSE_REQ_INIT ||
+-					old_req->state == FUSE_REQ_PENDING)) {
++	if (old_req->num_pages == 1 && old_req->state == FUSE_REQ_PENDING) {
+ 		struct backing_dev_info *bdi = inode_to_bdi(page->mapping->host);
+ 
+ 		copy_highpage(old_req->pages[0], page);
