@@ -331,7 +331,7 @@ void fuse_queue_forget(struct fuse_conn *fc, struct fuse_forget_link *forget,
 	forget->forget_one.nlookup = nlookup;
 
 	spin_lock(&fc->lock);
-	if (fc->connected) {
+	if (fiq->connected) {
 		fiq->forget_list_tail->next = forget;
 		fiq->forget_list_tail = forget;
 		wake_up(&fiq->waitq);
@@ -461,14 +461,14 @@ static void request_wait_answer(struct fuse_conn *fc, struct fuse_req *req)
 
 static void __fuse_request_send(struct fuse_conn *fc, struct fuse_req *req)
 {
+	struct fuse_iqueue *fiq = &fc->iq;
+
 	BUG_ON(test_bit(FR_BACKGROUND, &req->flags));
 	spin_lock(&fc->lock);
-	if (!fc->connected) {
+	if (!fiq->connected) {
 		spin_unlock(&fc->lock);
 		req->out.h.error = -ENOTCONN;
 	} else {
-		struct fuse_iqueue *fiq = &fc->iq;
-
 		req->in.h.unique = fuse_get_unique(fiq);
 		queue_request(fiq, req);
 		/* acquire extra reference, since request is still needed
@@ -544,7 +544,7 @@ static int fuse_request_send_notify_reply(struct fuse_conn *fc,
 	__clear_bit(FR_ISREPLY, &req->flags);
 	req->in.h.unique = unique;
 	spin_lock(&fc->lock);
-	if (fc->connected) {
+	if (fiq->connected) {
 		queue_request(fiq, req);
 		err = 0;
 	}
@@ -1010,7 +1010,7 @@ __acquires(fc->lock)
 	DECLARE_WAITQUEUE(wait, current);
 
 	add_wait_queue_exclusive(&fiq->waitq, &wait);
-	while (fc->connected && !request_pending(fiq)) {
+	while (fiq->connected && !request_pending(fiq)) {
 		set_current_state(TASK_INTERRUPTIBLE);
 		if (signal_pending(current))
 			break;
@@ -1200,13 +1200,13 @@ static ssize_t fuse_dev_do_read(struct fuse_conn *fc, struct file *file,
  restart:
 	spin_lock(&fc->lock);
 	err = -EAGAIN;
-	if ((file->f_flags & O_NONBLOCK) && fc->connected &&
+	if ((file->f_flags & O_NONBLOCK) && fiq->connected &&
 	    !request_pending(fiq))
 		goto err_unlock;
 
 	request_wait(fc);
 	err = -ENODEV;
-	if (!fc->connected)
+	if (!fiq->connected)
 		goto err_unlock;
 	err = -ERESTARTSYS;
 	if (!request_pending(fiq))
@@ -1994,7 +1994,7 @@ static unsigned fuse_dev_poll(struct file *file, poll_table *wait)
 	poll_wait(file, &fiq->waitq, wait);
 
 	spin_lock(&fc->lock);
-	if (!fc->connected)
+	if (!fiq->connected)
 		mask = POLLERR;
 	else if (request_pending(fiq))
 		mask |= POLLIN | POLLRDNORM;
@@ -2063,6 +2063,7 @@ void fuse_abort_conn(struct fuse_conn *fc)
 		LIST_HEAD(to_end1);
 		LIST_HEAD(to_end2);
 		fc->connected = 0;
+		fiq->connected = 0;
 		fc->blocked = 0;
 		fc->initialized = 1;
 		list_for_each_entry_safe(req, next, &fc->io, list) {

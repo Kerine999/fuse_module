@@ -266,7 +266,7 @@ __attribute__((section(".modinfo"))) =
 "depends=";
 
 
-MODULE_INFO(srcversion, "09F4111626F09F5A56F5FC4");
+MODULE_INFO(srcversion, "7378C9844EBF7C060263C89");
 MODULE_INFO(rhelversion, "7.6");
 #ifdef RETPOLINE
 	MODULE_INFO(retpoline, "Y");

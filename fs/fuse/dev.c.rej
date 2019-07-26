@@ -1,19 +1,15 @@
 --- fs/fuse/dev.c
 +++ fs/fuse/dev.c
-@@ -2148,12 +2164,12 @@
+@@ -2155,12 +2161,8 @@
  			spin_lock(&fc->lock);
  		}
  		end_requests(fc, &to_end2);
--		while (forget_pending(fc))
--			kfree(dequeue_forget(fc, 1, NULL));
-+		while (forget_pending(fiq))
-+			kfree(dequeue_forget(fiq, 1, NULL));
+-		while (forget_pending(fiq))
+-			kfree(dequeue_forget(fiq, 1, NULL));
  		end_polls(fc);
--		wake_up_all(&fc->waitq);
-+		wake_up_all(&fiq->waitq);
+-		wake_up_all(&fiq->waitq);
  		wake_up_all(&fc->blocked_waitq);
--		kill_fasync(&fc->fasync, SIGIO, POLL_IN);
-+		kill_fasync(&fiq->fasync, SIGIO, POLL_IN);
+-		kill_fasync(&fiq->fasync, SIGIO, POLL_IN);
  	}
  	spin_unlock(&fc->lock);
  }
